@@ -4,12 +4,10 @@ Repo pour les projets B2 en Linux et Réseau.
 
 | Nom              | Lien                   |
 | -----------------|:-----------------------|
-| Reseau           | [:link:][Reseau]       |
-| Linux            | [:link:][Linux]        |
+| Réseau           | [:link:][Reseau]       |
 |                  |                        |
-| Reseau-TP1       | [:link:][RTP1]         |
+| Réseau-TP1       | [:link:][RTP1]         |
 
-[Reseau]: 
-[Linux]: 
+[Reseau]: https://github.com/Tractorou24/LinuxReseauB2/tree/master/Reseau/TP1
 
-[RTP1]:
+[RTP1]:https://github.com/Tractorou24/LinuxReseauB2/tree/master/Reseau
