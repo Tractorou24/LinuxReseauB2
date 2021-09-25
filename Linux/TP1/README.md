@@ -164,3 +164,148 @@ Activate the web console with: systemctl enable --now cockpit.socket
 Last login: Wed Sep 22 12:41:30 2021 from 10.101.1.1
 [neva@node1 ~]$
 ```
+
+## II. Partitionnement
+
+### 2. Partitionnement
+
+Ajout des disques en PV :
+```
+[neva@node1 ~]$ sudo pvcreate /dev/sdb
+  Physical volume "/dev/sdb" successfully created.
+[neva@node1 ~]$ sudo pvcreate /dev/sdc
+  Physical volume "/dev/sdc" successfully created.
+```
+Création et extension au 2ème disque du VG :
+```
+[neva@node1 ~]$ sudo vgcreate secdsk /dev/sdb
+  Volume group "secdsk" successfully created
+[neva@node1 ~]$ sudo vgextend secdsk /dev/sdc
+  Volume group "secdsk" successfully extended
+```
+Création des 3 LV :
+```
+[neva@node1 ~]$ sudo lvcreate -L 1024M secdsk -n secdskpart1
+  Logical volume "secdskpart1" created.
+[neva@node1 ~]$ sudo lvcreate -L 1024M secdsk -n secdskpart2
+  Logical volume "secdskpart2" created.
+[neva@node1 ~]$ sudo lvcreate -L 1024M secdsk -n secdskpart3
+  Logical volume "secdskpart3" created.
+```
+Formatage des 3 LV :
+```
+[neva@node1 ~]$ mkfs -t ext4 /dev/secdsk/secdskpart1
+mke2fs 1.45.6 (20-Mar-2020)
+Could not open /dev/secdsk/secdskpart1: Permission denied
+[neva@node1 ~]$ sudo mkfs -t ext4 /dev/secdsk/secdskpart1
+mke2fs 1.45.6 (20-Mar-2020)
+Creating filesystem with 262144 4k blocks and 65536 inodes
+[...]
+Writing superblocks and filesystem accounting information: done
+
+[neva@node1 ~]$ sudo mkfs -t ext4 /dev/secdsk/secdskpart2
+mke2fs 1.45.6 (20-Mar-2020)
+Creating filesystem with 262144 4k blocks and 65536 inodes
+[...]
+Writing superblocks and filesystem accounting information: done
+
+[neva@node1 ~]$ sudo mkfs -t ext4 /dev/secdsk/secdskpart3
+mke2fs 1.45.6 (20-Mar-2020)
+Creating filesystem with 262144 4k blocks and 65536 inodes
+[...]
+Writing superblocks and filesystem accounting information: done
+```
+Montage des 3 LV :
+```
+[neva@node1 ~]$ sudo mkdir -p /mnt/secdskpart1
+[neva@node1 ~]$ sudo mkdir -p /mnt/secdskpart2
+[neva@node1 ~]$ sudo mkdir -p /mnt/secdskpart3
+[neva@node1 ~]$ sudo mount -t auto /dev/secdsk/secdskpart1 /mnt/secdskpart1
+[neva@node1 ~]$ sudo mount -t auto /dev/secdsk/secdskpart2 /mnt/secdskpart2
+[neva@node1 ~]$ sudo mount -t auto /dev/secdsk/secdskpart3 /mnt/secdskpart3
+```
+
+On fait en sorte que les partitions soient montées au démarrage (fichier /etc/fstabs). Pour cela on rajoute lces lignes dans le fichier.
+```
+/dev/secdsk/secdskpart1 /mnt/secdskpart1        ext4    defaults        0 0
+/dev/secdsk/secdskpart2 /mnt/secdskpart2        ext4    defaults        0 0
+/dev/secdsk/secdskpart3 /mnt/secdskpart3        ext4    defaults        0 0
+```
+Après redémmarage, les partions sont bien montées.
+
+## III. Gestion de services
+
+### 1. Interaction avec un service existant
+
+On vérifie que firewalld est démarré et est automatiquement allumé au démarrage :
+Loaded (activé au boot) / active (en fonctionnement)
+```
+[neva@node1 ~]$ systemctl status firewalld
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; vendor preset: enabled)
+   Active: active (running) since Sat 2021-09-25 19:25:37 CEST; 5min ago
+     Docs: man:firewalld(1)
+ Main PID: 1024 (firewalld)
+    Tasks: 2 (limit: 11218)
+   Memory: 30.4M
+   CGroup: /system.slice/firewalld.service
+           └─1024 /usr/libexec/platform-python -s /usr/sbin/firewalld --nofork --nopid
+```
+### 2. Création de service
+
+#### A. Unité simpliste
+Contenu du fichier et installation du service :
+```
+[neva@node1 ~]$ cat /etc/systemd/system/web.service
+[Unit]
+Description=Simple python web service
+
+[Service]
+ExecStart=/usr/bin/python3.6 -m http.server 8888
+
+[Install]
+WantedBy=multi-user.target
+[neva@node1 ~]$ sudo systemctl start web
+[neva@node1 ~]$ sudo systemctl enable web
+[neva@node1 ~]$ systemctl status web
+● web.service - Simple python web service
+   Loaded: loaded (/etc/systemd/system/web.service; enabled; vendor preset: disabled)
+   Active: active (running) since Sat 2021-09-25 19:43:29 CEST; 4min 44s ago
+ Main PID: 6088 (python3.6)
+    Tasks: 1 (limit: 11218)
+   Memory: 9.8M
+   CGroup: /system.slice/web.service
+           └─6088 /usr/bin/python3.6 -m http.server 8888
+```
+Il faut bien que le port 8888 soit ouvert pour héberger le serveur !
+
+![](https://i.imgur.com/Zf12VGb.png)
+
+#### B. Modification de l'unité
+Création de l'utilisateur web :
+```
+[neva@node1 ~]$ su -
+Password:
+[root@node1 ~]# useradd --no-create-home web
+[root@node1 ~]# passwd web
+Changing password for user web.
+New password:
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password:
+passwd: all authentication tokens updated successfully.
+```
+On rajoute ces 2 lignes dans le fichier du service :
+```
+User=web
+WorkingDirectory=/srv/webserver
+```
+Ajout du fichier toto : ```web@node1 /]$ sudo touch /srv/webserver/toto```
+
+Vérifiation du fonctinnement du serveur :
+````
+PS C:\Users\DIRECTEUR_PC2> curl http://10.101.1.11:8888/
+
+StatusCode        : 200
+StatusDescription : OK
+[...]
+```
