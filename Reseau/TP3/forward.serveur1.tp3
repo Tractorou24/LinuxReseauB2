@@ -1,0 +1,16 @@
+@       IN SOA dns1.serveur1.tp3 mail.toto (
+                                2014030801      ; serial
+                                3600      ; refresh
+                                1800      ; retry
+                                604800      ; expire
+                                86400 )    ; minimum
+
+; define nameservers
+	IN  NS  dns1.serveur1.tp3.
+;
+; DNS Server IP addresses and hostnames
+dns1 IN  A   10.3.1.2
+;
+;client records
+routeur IN A 10.3.1.126
+
