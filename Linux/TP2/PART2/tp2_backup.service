@@ -1,0 +1,13 @@
+[Unit]
+Description=Our own lil backup service (TP2)
+
+[Service]
+WorkingDirectory=/home/neva
+User=neva
+ExecStart=/srv/tp2_backup.sh /mnt/backup /var/www/sub-domains/web.tp2.linux/html/
+Type=oneshot
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+
