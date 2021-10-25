@@ -1,0 +1,14 @@
+[Unit]
+Description=Our own lil backup service (TP2)
+
+[Service]
+WorkingDirectory=/home/neva
+User=neva
+ExecStart=/srv/tp2_backup_db.sh /mnt/backup/ nextcloud
+Type=oneshot
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+
+
