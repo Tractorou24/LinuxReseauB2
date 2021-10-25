@@ -82,7 +82,7 @@ On monte les 2 dossiers sur les 2 vm :
 [neva@web ~]$ touch /mnt/backup/toto
 ```
 
-Dans /etc/fstab, on rajoute `10.101.1.13:/srv/backup/web.tp2.linux /mnt/backup/ xfs  defaults        0 0`
+Dans /etc/fstab, on rajoute `10.101.1.13:/srv/backup/web.tp2.linux /mnt/backup/ nfs  defaults        0 0`
 
 Et on fait la même chose dans db.tp2.linux en remplacant web par db.
 
