@@ -1,0 +1,13 @@
+<VirtualHost *:80>
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    ServerName __SERVER__NAME__
+
+    <Proxy *>
+        Require all granted
+    </Proxy>
+
+    ProxyPass "/" "http://localhost:19999/" connectiontimeout=5 timeout=30 keepalive=on
+    ProxyPassReverse "/" "http://localhost:19999/"
+</VirtualHost>

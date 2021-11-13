@@ -1,0 +1,14 @@
+<VirtualHost *:80>
+DocumentRoot /var/www/sub-domains/__REVERSE__DOMAIN__NAME__/html/
+ServerName  __SERVER__NAME__
+
+<Directory /var/www/sub-domains/__REVERSE__DOMAIN__NAME__/html/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+
+    <IfModule mod_dav.c>
+    Dav off
+    </IfModule>
+</Directory>
+</VirtualHost>
